@@ -25,6 +25,14 @@ jobs:
       - name: Install dependencies
         run: npm install
       
+      - name: Check Remotion installation
+        run: |
+          echo "Checking Remotion installation..."
+          ls -la node_modules/.bin/ | grep -i remotion || echo "Remotion not found in .bin"
+          cat node_modules/remotion/package.json | grep '"version"' || echo "Remotion package not found"
+          # Try to find the remotion binary
+          find node_modules -name "remotion*" -type f 2>/dev/null | head -5
+      
       - name: Create editingData.json
         run: |
           if [ -n "${{ github.event.inputs.editingData }}" ]; then
@@ -42,28 +50,13 @@ jobs:
           ls -la src/ || echo "No src/"
           ls -la public/assets/ || echo "No assets/"
       
-      - name: Check Root.tsx
+      - name: Render video (using direct path)
         run: |
-          echo "Checking Root.tsx..."
-          cat src/Root.tsx || echo "Root.tsx not found"
-          echo ""
-          echo "Checking Slideshow.tsx..."
-          cat src/Slideshow.tsx || echo "Slideshow.tsx not found"
-      
-      - name: Render video (verbose)
-        run: |
-          echo "Starting render..."
-          npx remotion render Slideshow out/video.mp4 --props=editingData.json --log=verbose 2>&1 | tee render.log
+          echo "Rendering video..."
+          # Use the direct path to remotion binary
+          ./node_modules/.bin/remotion render Slideshow out/video.mp4 --props=editingData.json
           echo "Render exit code: $?"
           ls -la out/ || echo "No out/ directory"
-      
-      - name: Upload render log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: render-log
-          path: render.log
-          if-no-files-found: warn
       
       - name: Check video
         run: |
@@ -81,4 +74,3 @@ jobs:
         with:
           name: rendered-video
           path: out/video.mp4
-          if-no-files-found: warn

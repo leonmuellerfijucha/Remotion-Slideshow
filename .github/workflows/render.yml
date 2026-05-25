@@ -23,7 +23,7 @@ jobs:
           npm --version
       
       - name: Install dependencies
-        run: npm install || npm install --legacy-peer-deps || echo "npm install failed, continuing..."
+        run: npm install || npm install --legacy-peer-deps || echo "npm install failed"
         continue-on-error: true
       
       - name: Create editingData.json
@@ -34,10 +34,10 @@ jobs:
           cat editingData.json || echo "{}" > editingData.json
       
       - name: Download assets
-        run: python3 download_assets.py || echo "Download failed, continuing..."
+        run: python3 download_assets.py || echo "Download failed"
         continue-on-error: true
       
-      - name: List files
+      - name: List files before render
         run: |
           pwd
           ls -la
@@ -48,16 +48,29 @@ jobs:
         run: |
           npx remotion render Slideshow out/video.mp4 --props=editingData.json 2>&1 || \
           npx remotion render src/Slideshow.tsx out/video.mp4 2>&1 || \
-          echo "Render failed"
+          echo "Render command failed"
         continue-on-error: true
+      
+      - name: Find video file
+        run: |
+          echo "Searching for video files..."
+          find . -name "*.mp4" -type f 2>/dev/null || echo "No mp4 files found"
+          ls -la out/ 2>/dev/null || echo "No out/ directory"
+          # If video not in out/, copy it there
+          VIDEO=$(find . -name "*.mp4" -type f | head -1)
+          if [ -n "$VIDEO" ] && [ ! -f "out/video.mp4" ]; then
+            mkdir -p out
+            cp "$VIDEO" out/video.mp4
+            echo "Copied $VIDEO to out/video.mp4"
+          fi
       
       - name: Check video
         run: |
           if [ -f "out/video.mp4" ]; then
             ls -lh out/video.mp4
-            echo "✅ Video rendered!"
+            echo "✅ Video found at out/video.mp4!"
           else
-            echo "❌ Video not found"
+            echo "❌ Video not found in out/"
             exit 1
           fi
       

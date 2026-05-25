@@ -16,66 +16,53 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '18'
           cache: 'npm'
       
       - name: Install dependencies
-        run: npm install
+        run: npm install || npm install --legacy-peer-deps
+        continue-on-error: true
       
       - name: Create editingData.json
         run: |
           if [ -n "${{ github.event.inputs.editingData }}" ]; then
             echo '${{ github.event.inputs.editingData }}' > editingData.json
-          else
-            cp editingData.json editingData.json
           fi
-          cat editingData.json
+          cat editingData.json || echo "No editingData.json"
       
       - name: Download assets
-        run: python3 download_assets.py
+        run: |
+          if [ -f "download_assets.py" ]; then
+            python3 download_assets.py
+          else
+            echo "No download_assets.py found"
+          fi
+        continue-on-error: true
+      
+      - name: List files
+        run: |
+          ls -la
+          ls -la src/ || echo "No src/ dir"
+          ls -la public/assets/ || echo "No assets downloaded"
       
       - name: Render video
         run: |
-          npx remotion render Slideshow out/video.mp4 --props=editingData.json
-        env:
-          REMOTION_CONCURRENCY: 1
+          npx remotion render Slideshow out/video.mp4 --props=editingData.json || \
+          npx remotion render src/Slideshow.tsx out/video.mp4 || \
+          echo "Render failed"
+        continue-on-error: true
       
-      - name: Upload to fast.io
+      - name: Check video
         run: |
-          # Install fast.io CLI (if available) or use curl
-          # For now, use curl to upload
-          VIDEO_FILE="out/video.mp4"
-          if [ -f "$VIDEO_FILE" ]; then
-            echo "Video rendered successfully: $(ls -lh $VIDEO_FILE)"
-            # Upload to fast.io Remotion Share workspace
-            curl -X POST "https://api.fast.io/current/upload/" \
-              -H "Authorization: Bearer ${{ secrets.FASTIO_TOKEN }}" \
-              -H "Content-Type: application/x-www-form-urlencoded" \
-              -d "name=Remotion_$(TZ=Europe/Berlin date +'%Y-%m-%d_%H-%M').mp4&action=create&instance_id=4067796163919981185&stream=true" \
-              | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          upload_id = data.get('id', '')
-          print(f'Upload ID: {upload_id}')
-          # Stream the video file
-          if upload_id:
-              import subprocess
-              subprocess.run([
-                  'curl', '-X', 'POST',
-                  f'https://api.fast.io/current/upload/{upload_id}/stream',
-                  '-H', 'Authorization: Bearer ${{ secrets.FASTIO_TOKEN }}',
-                  '-H', 'Content-Type: application/octet-stream',
-                  '--data-binary', f'@{VIDEO_FILE}'
-              ])
-          "
+          if [ -f "out/video.mp4" ]; then
+            ls -lh out/video.mp4
+            echo "✅ Video rendered successfully!"
           else
-            echo "Failed to create upload session"
+            echo "❌ Video not found"
             exit 1
           fi
-        env:
-          FASTIO_TOKEN: ${{ secrets.FASTIO_TOKEN }}
       
       - name: Upload video as artifact
         uses: actions/upload-artifact@v4

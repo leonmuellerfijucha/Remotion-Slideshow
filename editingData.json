@@ -1,0 +1,30 @@
+{
+  "trackUrl": "https://raw.githubusercontent.com/leonmuellerfijucha/Remotion-Slideshow/main/assets/track.wav",
+  "slides": [
+    {
+      "imgUrl": "https://raw.githubusercontent.com/leonmuellerfijucha/Remotion-Slideshow/main/assets/img1.jpg",
+      "ttsUrl": "https://raw.githubusercontent.com/leonmuellerfijucha/Remotion-Slideshow/main/assets/tts1.mp3",
+      "text": "Willkommen"
+    },
+    {
+      "imgUrl": "https://raw.githubusercontent.com/leonmuellerfijucha/Remotion-Slideshow/main/assets/img2.jpg",
+      "ttsUrl": "https://raw.githubusercontent.com/leonmuellerfijucha/Remotion-Slideshow/main/assets/tts2.mp3",
+      "text": "Natur"
+    },
+    {
+      "imgUrl": "https://raw.githubusercontent.com/leonmuellerfijucha/Remotion-Slideshow/main/assets/img3.jpg",
+      "ttsUrl": "https://raw.githubusercontent.com/leonmuellerfijucha/Remotion-Slideshow/main/assets/tts3.mp3",
+      "text": "Abenteuer"
+    },
+    {
+      "imgUrl": "https://raw.githubusercontent.com/leonmuellerfijucha/Remotion-Slideshow/main/assets/img4.jpg",
+      "ttsUrl": "https://raw.githubusercontent.com/leonmuellerfijucha/Remotion-Slideshow/main/assets/tts4.mp3",
+      "text": "Erinnerungen"
+    },
+    {
+      "imgUrl": "https://raw.githubusercontent.com/leonmuellerfijucha/Remotion-Slideshow/main/assets/img5.jpg",
+      "ttsUrl": "https://raw.githubusercontent.com/leonmuellerfijucha/Remotion-Slideshow/main/assets/tts5.mp3",
+      "text": "Ende"
+    }
+  ]
+}

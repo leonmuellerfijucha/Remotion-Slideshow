@@ -25,36 +25,40 @@ jobs:
       - name: Install dependencies
         run: npm install
       
-      - name: Check Remotion installation
+      - name: Check Remotion binary
         run: |
-          echo "Checking Remotion installation..."
-          ls -la node_modules/.bin/ | grep -i remotion || echo "Remotion not found in .bin"
-          cat node_modules/remotion/package.json | grep '"version"' || echo "Remotion package not found"
-          # Try to find the remotion binary
-          find node_modules -name "remotion*" -type f 2>/dev/null | head -5
+          echo "Checking Remotion..."
+          ls -la node_modules/.bin/ | grep -i remotion
+          file node_modules/.bin/remotion || echo "Not a file"
+          chmod +x node_modules/.bin/remotion 2>/dev/null || true
+          ./node_modules/.bin/remotion --version || echo "Remotion version check failed"
       
       - name: Create editingData.json
         run: |
           if [ -n "${{ github.event.inputs.editingData }}" ]; then
             echo '${{ github.event.inputs.editingData }}' > editingData.json
           fi
-          cat editingData.json
+          cat editingData.json || echo "No editingData.json"
       
       - name: Download assets
-        run: python3 download_assets.py
+        run: python3 download_assets.py || echo "Download failed"
       
-      - name: List files before render
+      - name: List files
         run: |
           pwd
           ls -la
           ls -la src/ || echo "No src/"
           ls -la public/assets/ || echo "No assets/"
       
-      - name: Render video (using direct path)
+      - name: Test Remotion (list compositions)
+        run: |
+          echo "Listing compositions..."
+          ./node_modules/.bin/remotion compositions src/Root.tsx || echo "Compositions list failed"
+      
+      - name: Render video (simple)
         run: |
           echo "Rendering video..."
-          # Use the direct path to remotion binary
-          ./node_modules/.bin/remotion render Slideshow out/video.mp4 --props=editingData.json
+          ./node_modules/.bin/remotion render Slideshow out/video.mp4 2>&1
           echo "Render exit code: $?"
           ls -la out/ || echo "No out/ directory"
       

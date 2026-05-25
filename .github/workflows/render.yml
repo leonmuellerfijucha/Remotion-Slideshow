@@ -35,19 +35,45 @@ jobs:
       - name: Download assets
         run: python3 download_assets.py
       
-      - name: List files
+      - name: List files before render
         run: |
           pwd
           ls -la
-          ls -la src/ || true
-          ls -la public/assets/ || true
+          ls -la src/ || echo "No src/"
+          ls -la public/assets/ || echo "No assets/"
       
-      - name: Render video
+      - name: Check Root.tsx
         run: |
-          echo "Rendering video..."
-          npx remotion render Slideshow out/video.mp4 --props=editingData.json
-          echo "Render complete!"
-          ls -la out/video.mp4
+          echo "Checking Root.tsx..."
+          cat src/Root.tsx || echo "Root.tsx not found"
+          echo ""
+          echo "Checking Slideshow.tsx..."
+          cat src/Slideshow.tsx || echo "Slideshow.tsx not found"
+      
+      - name: Render video (verbose)
+        run: |
+          echo "Starting render..."
+          npx remotion render Slideshow out/video.mp4 --props=editingData.json --log=verbose 2>&1 | tee render.log
+          echo "Render exit code: $?"
+          ls -la out/ || echo "No out/ directory"
+      
+      - name: Upload render log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: render-log
+          path: render.log
+          if-no-files-found: warn
+      
+      - name: Check video
+        run: |
+          if [ -f "out/video.mp4" ]; then
+            ls -lh out/video.mp4
+            echo "✅ Video rendered successfully!"
+          else
+            echo "❌ Video not found"
+            exit 1
+          fi
       
       - name: Upload video as artifact
         if: success()
@@ -55,3 +81,4 @@ jobs:
         with:
           name: rendered-video
           path: out/video.mp4
+          if-no-files-found: warn
